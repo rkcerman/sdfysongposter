@@ -241,8 +241,12 @@ public class SDFYSongPoster {
 					videoPost.setEmbedCode(embedCode);
 					videoPost.setCaption(mainCaption);
 					videoPost.setFormat("html");
+					videoPost.setTweet("off");
 					videoPost.addTag(tags);
+					if(postCheck.equalsIgnoreCase("Q"))
+						videoPost.setState("queue");
 					videoPost.save();
+					
 					
 					System.out.println();
 					System.out.println("Video posted.");
@@ -262,9 +266,7 @@ public class SDFYSongPoster {
 				
 		} else if(postCheck.equalsIgnoreCase("N")){
 			System.exit(0);
-		} else if(postCheck.equalsIgnoreCase("Q")){
-			
-		}
+		} 
 	}
 	
 	public static ArrayList<ReleaseArray> queryDiscogs(String artist, String song, String type) throws JSONException, Exception {
