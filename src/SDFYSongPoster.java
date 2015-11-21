@@ -77,9 +77,22 @@ public class SDFYSongPoster {
 					}
 				}
 			}
+		
+			if(args[0].equals("--master") || args[0].equals("--all") || args[0].equals("--release")){
+				mainApp(url, description, artist, song, year, label, genre, type);
+			} else {
+				System.out.println("Unknown argument: "+args[0]+". Type --help for help.");
+			}
 		} else {
 			System.out.println("Arguments necessary. Type --help for help.");
 		}
+		
+		
+		
+	}
+	
+
+	public static void mainApp(String url, String description, String artist, String song, String year, String label, String genre, String type) throws JSONException, Exception{
 		System.out.println("YouTube URL (type --help for help) : " + url);
 		System.out.println("Description : " + description);
 		System.out.println("Artist : " + artist);
@@ -91,12 +104,17 @@ public class SDFYSongPoster {
 		System.out.println("----------------------");
 		System.out.println("Loading video title...");
 		
-		String[] videoName = getArtistSong(url);
+		// If the Artist and Song were not specified, we obtain it from YouTube
+		
 		if(artist == null){
+		String[] videoName = getArtistSong(url);
 		artist = videoName[0];
 		}
-		if(song == null)
-			song = videoName[1];
+		
+		if(song == null){
+		String[] videoName = getArtistSong(url);
+		song = videoName[1];
+		}
 		
 		System.out.println("Video Name : " + artist + " - "+ song);
 		System.out.println("Artist (from YouTube) : " + artist);
@@ -171,11 +189,13 @@ public class SDFYSongPoster {
 		String completeCaption = String.format(mockupTumblrPost(releases, artist, song, description, num)); 
 		// System.out.println(completeCaption);
 		System.out.println("I----------==================================================================================---------I");
+		System.out.println("Any tweet caption? : ");
 		
+		String genreHashtag = release.getGenres().get(0).toString().replace(" ", "");
+		String tweetCaption = artist + " - " + song + " -- " + new Scanner(System.in).nextLine() + " : " + url + " #" + genreHashtag;
 		
-		postToTumblr(url, completeCaption);
+		postToTumblr(url, completeCaption, tweetCaption);
 				
-		
 	}
 	
 	public static String[] getArtistSong(String url) throws IOException{
@@ -195,7 +215,7 @@ public class SDFYSongPoster {
 		return artistSong;
 	}
 	
-	public static void postToTumblr(String url, String caption) throws IOException{
+	public static void postToTumblr(String url, String caption, String tweetCaption) throws IOException{
 		// <iframe width="560" height="315" src="https://www.youtube.com/embed/Lds8BgDaS8g" frameborder="0" allowfullscreen></iframe>
 		Document ytPage = Jsoup.connect(url).get();
 		
@@ -241,13 +261,12 @@ public class SDFYSongPoster {
 					videoPost.setEmbedCode(embedCode);
 					videoPost.setCaption(mainCaption);
 					videoPost.setFormat("html");
-					videoPost.setTweet("off");
+					videoPost.setTweet(tweetCaption);
 					videoPost.addTag(tags);
 					if(postCheck.equalsIgnoreCase("Q"))
 						videoPost.setState("queue");
 					videoPost.save();
-					
-					
+										
 					System.out.println();
 					System.out.println("Video posted.");
 					
@@ -269,6 +288,7 @@ public class SDFYSongPoster {
 		} 
 	}
 	
+
 	public static ArrayList<ReleaseArray> queryDiscogs(String artist, String song, String type) throws JSONException, Exception {
 	
 		final String discogsAuth = "CYCVIMlhnUCNvmrruDzNxdaJwSApQkfdhzCQFOuW";
