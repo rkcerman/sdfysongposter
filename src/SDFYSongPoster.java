@@ -12,6 +12,7 @@ import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,11 +23,32 @@ import com.tumblr.jumblr.types.QuotePost;
 import com.tumblr.jumblr.types.Video;
 import com.tumblr.jumblr.types.VideoPost;
 
-
+/**
+ * <strong> SDFYSongPoster </strong> is a command line app wrote in Java that serves to provide
+ * a quick and convenient way for music bloggers to post songs on YouTube to Tumblr. 
+ * 
+ * Besides an artist name and a song name, some music bloggers like to include useful meta-info 
+ * about songs in their blog posts, such as the name of the album, year of the release, label,
+ * genre and so on. Gathering these info does not take long, but if you post many songs a day
+ * and also try to format your blog posts (e.g. artist name in bold, album name in italics, etc.)
+ * this process can be quite time-consuming when added up. 
+ * 
+ * When you use SDFYSongPoster, you only need to specify the YouTube link, and the rest is done
+ * automatically. The app fetches all the necessary info about a song from Discogs, mocks up the 
+ * Tumblr post the way you want, and when you are satisfied with the mockup, posts it to Tumblr.
+ * @author Richard Kaliarik
+ *
+ */
 public class SDFYSongPoster {
 
 	private static final String BLOG_NAME = "somedopamineforyou.tumblr.com";
-		
+	
+	/**
+	 * The main() method. Checks all the arguments and categorizes them. If the syntax is correct, it executes the mainApp() method.
+	 * @param args  
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws JSONException, Exception {
 		// TODO Auto-generated method stub
 
@@ -91,7 +113,20 @@ public class SDFYSongPoster {
 		
 	}
 	
-
+	/**
+	 * The main core which executes tasks after initial argument check in the main() function
+	 * 
+	 * @param url - YouTube URL of the post
+	 * @param description - Additional description of the song, user-specified
+	 * @param artist - Artist name
+	 * @param song - Song name
+	 * @param year - Release year
+	 * @param label - Label it was released on
+	 * @param genre - Genre of the song
+	 * @param type - What type of entry on Discogs should be searched for: "all", "release" or "master"
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static void mainApp(String url, String description, String artist, String song, String year, String label, String genre, String type) throws JSONException, Exception{
 		System.out.println("YouTube URL (type --help for help) : " + url);
 		System.out.println("Description : " + description);
@@ -186,7 +221,7 @@ public class SDFYSongPoster {
 						
 		System.out.print("Using release number: " + num);
 		
-		String completeCaption = String.format(mockupTumblrPost(releases, artist, song, description, num)); 
+		String completeCaption = String.format(mockupTumblrPost(releases.get(num), artist, song, description)); 
 		// System.out.println(completeCaption);
 		System.out.println("I----------==================================================================================---------I");
 		System.out.println("Any tweet caption? : ");
@@ -198,6 +233,12 @@ public class SDFYSongPoster {
 				
 	}
 	
+	/**
+	 * 
+	 * @param url - the YouTube URL of the song
+	 * @return artistSong - a String array which holds two fields: 1. Artist name 2. Song name 
+	 * @throws IOException
+	 */
 	public static String[] getArtistSong(String url) throws IOException{
 		String[] artistSong = new String[2];
 		
@@ -215,6 +256,15 @@ public class SDFYSongPoster {
 		return artistSong;
 	}
 	
+	/**
+	 * Posts a song to Tumblr with an appropriate description. Also, sends a tweet caption
+	 * if there is any.
+	 * 
+	 * @param url - the YouTube URL of the song
+	 * @param caption - everything that will be included in the Description field on Tumblr
+	 * @param tweetCaption - additional comment that will be posted next to the link on Twitter 
+	 * @throws IOException
+	 */
 	public static void postToTumblr(String url, String caption, String tweetCaption) throws IOException{
 		// <iframe width="560" height="315" src="https://www.youtube.com/embed/Lds8BgDaS8g" frameborder="0" allowfullscreen></iframe>
 		Document ytPage = Jsoup.connect(url).get();
@@ -288,7 +338,17 @@ public class SDFYSongPoster {
 		} 
 	}
 	
-
+	/**
+	 * Sends a query to Discogs to search for releases containing the artist name
+	 * and the song name. Returns a list of releases to choose from.
+	 * 
+	 * @param artist - the Artist name (specified in args, or obtained from YouTube)
+	 * @param song - the Song name (specified in args, or obtained from YouTube)
+	 * @param type - three possible: "all", "release" or "master"
+	 * @return releases - an ArrayList containing release name, label, year of release and genres
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static ArrayList<ReleaseArray> queryDiscogs(String artist, String song, String type) throws JSONException, Exception {
 	
 		final String discogsAuth = "CYCVIMlhnUCNvmrruDzNxdaJwSApQkfdhzCQFOuW";
@@ -304,12 +364,20 @@ public class SDFYSongPoster {
 		return releases;
 	}
 	
-	public static String mockupTumblrPost(ArrayList<ReleaseArray> releases, String artist, String song, String description, int rNum){
-		ReleaseArray release = releases.get(rNum);
-		
+	/**
+	 * Outputs into CLI a mockup of a Tumblr post, including all the 
+	 * necessary formatting retrieved from the config file.
+	 * 
+	 * @param release - Release used for the mockup  
+	 * @param artist - Artist name used for mocking up (exists in case the album artist in the discogs release name is e.g. 'Various Artists')
+	 * @param song - Song name used for mocking up
+	 * @param description - Specified description (if any, otherwise null or empty string "")
+	 * @return cfgText - String mockup of the post
+	 */
+	public static String mockupTumblrPost(ReleaseArray release, String artist, String song, String description){
+				
 		System.out.println();
-		//System.out.println("Mockup of the post: ");
-		
+	
 		StringBuffer dataBuffer = loadConfig();
 		
 		String cfgText = dataBuffer.toString().replace("[Artist]", "<b>" + artist + "</b>")
@@ -322,6 +390,7 @@ public class SDFYSongPoster {
 				.replace("#Year", "#"+release.getYear())
 				.replace("#Label", "#"+(CharSequence) release.getLabel().get(0));
 		
+		//TODO This assumes that there are three genre tags in cfg file. Make it dynamic.
 		if(release.getGenres().length() < 3) {
 			for (int i=3; i>release.getGenres().length(); i--){
 			cfgText = cfgText.replace("#Genre"+i+", ","");
@@ -335,6 +404,10 @@ public class SDFYSongPoster {
 		return cfgText;
 	}
 	
+	/**
+	 * Method for loading the config file which contains information about post format
+	 * @return dataBuffer - Contents of the sdfy.cfg file
+	 */
 	public static StringBuffer loadConfig(){
 		StringBuffer dataBuffer = new StringBuffer();
 		try {
