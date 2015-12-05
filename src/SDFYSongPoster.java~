@@ -35,13 +35,11 @@ public class SDFYSongPoster {
     private static final String BLOG_NAME = "somedopamineforyou.tumblr.com";
 
     /**
-     * The main() method. Checks all the arguments and categorizes them. 
-     * If the syntax is correct, it executes the mainApp() method.
+     * The main() method. Checks all the arguments and categorizes them. If the syntax is correct, it executes the mainApp() method.
      * @param args  
      * @throws JSONException
      * @throws Exception
      */
-    
     public static void main(String[] args) throws JSONException, Exception {
         // TODO Auto-generated method stub
 
@@ -139,12 +137,12 @@ public class SDFYSongPoster {
         // If the Artist and Song were not specified, we obtain it from YouTube
 
         if(artist == null){
-            String[] videoName = fetchFromYoutube(url);
+            String[] videoName = getArtistSong(url);
             artist = videoName[0];
         }
 
         if(song == null){
-            String[] videoName = fetchFromYoutube(url);
+            String[] videoName = getArtistSong(url);
             song = videoName[1];
         }
 
@@ -158,7 +156,6 @@ public class SDFYSongPoster {
         for(int i=0; i < releases.size(); i++){
             release = releases.get(i);
             if(release.getType().equals("master")){
-
                 System.out.println("OooooooooooooooMASTERooooooooooooooO");
                 System.out.println(i+ "   Release title: " + release.getTitle());
                 System.out.println("           Year: " + release.getYear());
@@ -183,9 +180,7 @@ public class SDFYSongPoster {
 
                 }           
                 System.out.println("           Type: " + release.getType());
-
             } else {
-
                 System.out.println("....................................");
                 System.out.println(i+ ".   Release title: " + release.getTitle());
                 System.out.println("           Year: " + release.getYear());
@@ -210,7 +205,6 @@ public class SDFYSongPoster {
 
                 }
                 System.out.println("           Type: " + release.getType());
-
             }
         }
 
@@ -240,7 +234,7 @@ public class SDFYSongPoster {
      * @return artistSong - a String array which holds two fields: 1. Artist name 2. Song name 
      * @throws IOException
      */
-    public static String[] fetchFromYoutube(String url) throws IOException{
+    public static String[] getArtistSong(String url) throws IOException{
         String[] artistSong = new String[2];
 
         Document ytPage = Jsoup.connect(url).get();

@@ -9,7 +9,7 @@ public class ReleaseArray {
 	public String year;
 	public JSONArray genres;
 	public JSONArray label;
-	public String releaseTitle;
+	public String album;
 	public String type;
 
 
@@ -26,7 +26,7 @@ public class ReleaseArray {
 	}
 	
 	public String getTitle() {
-		return releaseTitle; 
+		return album; 
 	}
 	
 	public String getType() {
@@ -56,7 +56,7 @@ public class ReleaseArray {
 						}	
 		try {
 				
-			e.releaseTitle = jsonobject.getString("title");	
+			e.album = jsonobject.getString("title");	
 			e.type = jsonobject.getString("type");
 			
 			} catch (JSONException je) {
