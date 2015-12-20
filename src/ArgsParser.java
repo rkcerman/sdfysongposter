@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -34,4 +35,62 @@ public class ArgsParser{
 		
 	}
 
+	public static void releaseWriter(ArrayList<ReleaseArray> releases){
+		for(ReleaseArray release : releases){
+			int i = releases.indexOf(release);
+			 if(release.getType().equals("master")){
+
+	                System.out.println("O---------------MASTER---------------O");
+	                System.out.println(i+ "   Release title: " + release.getTitle());
+	                System.out.println("           Year: " + release.getYear());
+	                System.out.print("         Labels: "); 
+	                for(int b=0;b < release.getLabel().length();b++){
+	                    if(b+1 != release.getLabel().length()) {
+	                        System.out.print(release.getLabel().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getLabel().get(b));
+	                    }
+	                }
+	                System.out.print("         Genres: "); 
+	                for(int b=0;b < release.getGenres().length();b++){
+	                    if(b+1 != release.getGenres().length()) {
+	                        System.out.print(release.getGenres().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getGenres().get(b));
+
+	                    }
+
+	                }           
+	                System.out.println("           Type: " + release.getType());
+
+	            } else {
+
+	                System.out.println("....................................");
+	                System.out.println(i+ ".   Release title: " + release.getTitle());
+	                System.out.println("           Year: " + release.getYear());
+	                System.out.print("         Labels: "); 
+	                for(int b=0;b < release.getLabel().length();b++){
+	                    if(b+1 != release.getLabel().length()) {
+	                        System.out.print(release.getLabel().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getLabel().get(b));
+
+	                    }
+
+	                }
+	                System.out.print("         Genres: "); 
+	                for(int b=0;b < release.getGenres().length();b++){
+	                    if(b+1 != release.getGenres().length()) {
+	                        System.out.print(release.getGenres().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getGenres().get(b));
+
+	                    }
+
+	                }
+	                System.out.println("           Type: " + release.getType());
+
+	            }
+		}
+	}
 }

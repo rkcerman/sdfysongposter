@@ -1,8 +1,6 @@
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,15 +11,11 @@ import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import com.tumblr.jumblr.JumblrClient;
 import com.tumblr.jumblr.exceptions.JumblrException;
-import com.tumblr.jumblr.types.QuotePost;
-import com.tumblr.jumblr.types.Video;
 import com.tumblr.jumblr.types.VideoPost;
 
 /**
@@ -29,6 +23,7 @@ import com.tumblr.jumblr.types.VideoPost;
  * @author Richard Kaliarik
  * @version 30-11-2015
  */
+
 public class SDFYSongPoster {
 
     //TODO make it load from sdfy2.cfg
@@ -44,67 +39,48 @@ public class SDFYSongPoster {
     
     public static void main(String[] args) throws JSONException, Exception {
         // TODO Auto-generated method stub
+    	Song song = new Song();
+    	
+    	System.out.println("YouTube URL: ");
+		Scanner input = new Scanner(System.in);
+		URL youtubeURL = new URL(input.nextLine());
+		song.setURL(youtubeURL);
+		
+		System.out.println("Leave empty to automatically fetch from YouTube");
 
+		System.out.println("Artist: ");
+//		Scanner inputArtist = new Scanner(System.in);
+		String artist = input.nextLine();
 
-        String url = null;
-        String description = "";
-        String artist = null;
-        String song = null;
-        String year = null;
-        String label = null;
-        String genre = null;
-        String type = null;
+		System.out.println("Song name: ");
+//		Scanner inputSongName = new Scanner(System.in);
+		String songName = input.nextLine();
 
-        if(args.length >0){
-            if(args[0].equals("--help")){
-                System.out.println("Usage: SDFYSongPoster.jar <OPTION> <URL> [description] [artist] [song] [year] [label] [genre]");
-                System.out.println("Options:");
-                System.out.println("--help - Displays help");
-                System.out.println("--all - Search for all items");
-                System.out.println("--master - Search for master");
-                System.out.println("--release - Search for releases");
-            } else if (args[0].equals("--all")){
-                type = "all";
-            } else if (args[0].equals("--master")){
-                type = "master";
-            } else if (args[0].equals("--release")){
-                type = "release";
-            }
-
-            if(args.length > 1){
-                url = args[1];
-                if(args.length > 2){
-                    description = args[2];
-                    if(args.length > 3) {
-                        artist = args[3];
-                        if(args.length > 4) {
-                            song = args[4];
-                            if(args.length > 5) {
-                                year = args[5];
-                                if(args.length > 6) {
-                                    label = args[6];
-                                    if(args.length > 7) {
-                                        genre = args[7];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if(args[0].equals("--master") || args[0].equals("--all") || args[0].equals("--release")){
-                mainApp(url, description, artist, song, year, label, genre, type);
-            } else {
-                System.out.println("Unknown argument: "+args[0]+". Type --help for help.");
-            }
-        } else {
-            System.out.println("Arguments necessary. Type --help for help.");
-        }
-
-
-
-    }
+//		inputArtist.close();
+//		inputURL.close();
+//		inputSongName.close();
+		
+		if(artist == null 	|| songName == null   ||
+		   artist.isEmpty() || songName.isEmpty() ||
+		   artist == ""		|| songName == ""){
+			
+			// If the Artist and Song were not specified, we obtain it from YouTube
+			System.out.println("Fetching artist and song from YouTube.");
+			String [] artistSong = fetchFromYoutube(youtubeURL);
+			System.out.println("Fetched!");
+			
+			song.setArtist(artistSong[0]);
+			song.setSongName(artistSong[1]);
+		} else {
+			song.setArtist(artist);
+			song.setSongName(songName);
+		}
+		
+		System.out.println("Artist: " + song.getArtist());
+		System.out.println("Song: " + song.getSongName());
+		
+		mainApp(song);
+	}	
 
     /**
      * The main core which executes tasks after initial argument check in the main() function
@@ -124,114 +100,43 @@ public class SDFYSongPoster {
     //TODO Too many params, lower to three
     //TODO Break the methods to multiple methods (15 lines MAX!)
 
-    public static void mainApp(String url, String description, String artist, String song, String year, String label, String genre, String type) throws JSONException, Exception{
-        System.out.println("YouTube URL (type --help for help) : " + url);
-        System.out.println("Description : " + description);
-        System.out.println("Artist : " + artist);
-        System.out.println("Song : " + song);
-        System.out.println("Year : " + year);
-        System.out.println("Label : " + label);
-        System.out.println("Genre : " + genre);
+    public static void mainApp(Song song) throws JSONException, Exception{
+    	System.out.println("(M)aster/(R)elease/(A)ll?: ");
+    	Scanner input = new Scanner(System.in);
+    	String inputStringType = input.nextLine();
+    	String type = typeReturn(inputStringType.toLowerCase());
+    	
+        ArrayList<ReleaseArray> releases = queryDiscogs(song, type); 
 
-        System.out.println("----------------------");
-        System.out.println("Loading video title...");
-
-        // If the Artist and Song were not specified, we obtain it from YouTube
-
-        if(artist == null){
-            String[] videoName = fetchFromYoutube(url);
-            artist = videoName[0];
-        }
-
-        if(song == null){
-            String[] videoName = fetchFromYoutube(url);
-            song = videoName[1];
-        }
-
-        System.out.println("Video Name : " + artist + " - "+ song);
-        System.out.println("Artist (from YouTube) : " + artist);
-        System.out.println("Song (from YouTube) : " + song);
-
-        ArrayList<ReleaseArray> releases = queryDiscogs(artist, song, type); 
-        ReleaseArray release = null;
-
-        for(int i=0; i < releases.size(); i++){
-            release = releases.get(i);
-            if(release.getType().equals("master")){
-
-                System.out.println("OooooooooooooooMASTERooooooooooooooO");
-                System.out.println(i+ "   Release title: " + release.getTitle());
-                System.out.println("           Year: " + release.getYear());
-                System.out.print("         Labels: "); 
-                for(int b=0;b < release.getLabel().length();b++){
-                    if(b+1 != release.getLabel().length()) {
-                        System.out.print(release.getLabel().get(b) + ", ");
-                    } else {
-                        System.out.println(release.getLabel().get(b));
-
-                    }
-
-                }
-                System.out.print("         Genres: "); 
-                for(int b=0;b < release.getGenres().length();b++){
-                    if(b+1 != release.getGenres().length()) {
-                        System.out.print(release.getGenres().get(b) + ", ");
-                    } else {
-                        System.out.println(release.getGenres().get(b));
-
-                    }
-
-                }           
-                System.out.println("           Type: " + release.getType());
-
-            } else {
-
-                System.out.println("....................................");
-                System.out.println(i+ ".   Release title: " + release.getTitle());
-                System.out.println("           Year: " + release.getYear());
-                System.out.print("         Labels: "); 
-                for(int b=0;b < release.getLabel().length();b++){
-                    if(b+1 != release.getLabel().length()) {
-                        System.out.print(release.getLabel().get(b) + ", ");
-                    } else {
-                        System.out.println(release.getLabel().get(b));
-
-                    }
-
-                }
-                System.out.print("         Genres: "); 
-                for(int b=0;b < release.getGenres().length();b++){
-                    if(b+1 != release.getGenres().length()) {
-                        System.out.print(release.getGenres().get(b) + ", ");
-                    } else {
-                        System.out.println(release.getGenres().get(b));
-
-                    }
-
-                }
-                System.out.println("           Type: " + release.getType());
-
-            }
-        }
-
+        releaseWriter(releases);
+        
         System.out.println("I----===========================---I");
         System.out.println("Which release should I use? : ");
 
-        Scanner input = new Scanner(System.in);
+//        Scanner input = new Scanner(System.in);
         int num = input.nextInt();
 
         System.out.print("Using release number: " + num);
+        ReleaseArray release = releases.get(num);
 
-        String completeCaption = String.format(mockupTumblrPost(releases.get(num), artist, song, description)); 
+        //TODO below just a test value, DELETE!
+        String description = "";
+
+        String completeCaption = String.format(mockupTumblrPost(releases.get(num), song.getArtist(), song.getSongName(), description)); 
         // System.out.println(completeCaption);
         System.out.println("I----------==================================================================================---------I");
         System.out.println("Any tweet caption? : ");
 
         String genreHashtag = release.getGenres().get(0).toString().replace(" ", "");
-        String tweetCaption = artist + " - " + song + " -- " + new Scanner(System.in).nextLine() + " : " + url + " #" + genreHashtag;
 
-        postToTumblr(url, completeCaption, tweetCaption);
+        //TODO put this one to sdfy.cfg
+        Scanner tweetCapScan = new Scanner(System.in);
+        String tweetCaption = song.getArtist() + " - " + song.getSongName() + " -- " + tweetCapScan.nextLine() + " : " + song.getURL().toString() + " #" + genreHashtag;
 
+        postToTumblr(song.getURL(), completeCaption, tweetCaption);
+
+        tweetCapScan.close();
+        input.close();
     }
 
     /**
@@ -240,10 +145,12 @@ public class SDFYSongPoster {
      * @return artistSong - a String array which holds two fields: 1. Artist name 2. Song name 
      * @throws IOException
      */
-    public static String[] fetchFromYoutube(String url) throws IOException{
+    public static String[] fetchFromYoutube(URL url) throws IOException{
+    	//TODO better splits, check for existence of "-" and " - "
+    	
         String[] artistSong = new String[2];
 
-        Document ytPage = Jsoup.connect(url).get();
+        Document ytPage = Jsoup.connect(url.toString()).get();
 
         String videoTitle = ytPage.getElementsByTag("meta")
             .first()
@@ -264,12 +171,13 @@ public class SDFYSongPoster {
      * @param tweetCaption - additional comment that will be posted next to the link on Twitter 
      * @throws IOException
      */
-    public static void postToTumblr(String url, String caption, String tweetCaption) throws IOException{
+    public static void postToTumblr(URL url, String caption, String tweetCaption) throws IOException{
         // <iframe width="560" height="315" src="https://www.youtube.com/embed/Lds8BgDaS8g" frameborder="0" allowfullscreen></iframe>
-        Document ytPage = Jsoup.connect(url).get();
+        Document ytPage = Jsoup.connect(url.toString()).get();
 
         String embedURL = ytPage.select("meta[property=og:video:url]").attr("content");
         String embedCode = "<iframe width=\"560\" height=\"315\" src=\""+embedURL+"\" frameborder=\"0\" allowfullscreen></iframe>";
+        // Put above to a separate method, maybe together with fetchFromYoutube 
 
         String mainCaption= caption.substring(0, caption.indexOf("[TAG"));
         String tags= caption.substring(caption.indexOf("[TAG")+4).replace("]", "").replace(": ", "");
@@ -285,8 +193,10 @@ public class SDFYSongPoster {
         Scanner input = new Scanner(System.in);
         String postCheck = input.nextLine();
 
+        input.close();
+        
         if(postCheck.equalsIgnoreCase("Y") || postCheck.equalsIgnoreCase("Q")){
-
+        	//TODO to sdfy.cfg
             JumblrClient client = new JumblrClient(
                     "JrZBe7ncslnygHnDImJ9FOSwsQfTlPHHSZDixe8JfRPD1fsx1W",
                     "QXmUT2vGnsdMlyrpWMomItIhsADYUKtM6UTdG4q3V57jMzmImH"
@@ -348,12 +258,14 @@ public class SDFYSongPoster {
      * @throws JSONException
      * @throws Exception
      */
-    public static ArrayList<ReleaseArray> queryDiscogs(String artist, String song, String type) throws JSONException, Exception {
+    public static ArrayList<ReleaseArray> queryDiscogs(Song song, String type) throws JSONException, Exception {
 
+    	// TODO to sdfy.cfg
         final String discogsAuth = "CYCVIMlhnUCNvmrruDzNxdaJwSApQkfdhzCQFOuW";
         DiscogsClient client = new DiscogsClient();
 
-        String discogsURL = ("https://api.discogs.com/database/search?q="+artist+"%20"+song+"&type="+type+"&token="+discogsAuth).replace(" ", "%20");
+        String discogsURL = ("https://api.discogs.com/database/search?q="+ song.getArtist() +"%20"+
+        					song.getSongName() + "&type="+ type + "&token=" + discogsAuth).replace(" ", "%20");
         JSONObject mainDisc = new JSONObject(client.sendGet(discogsURL));
         JSONArray arrayDisc = new JSONArray();
         arrayDisc = mainDisc.getJSONArray("results");
@@ -404,9 +316,86 @@ public class SDFYSongPoster {
     }
 
     /**
+     * Outputs fetched releases from Discogs to CLI based on the query
+     * @param releases
+     */
+	public static void releaseWriter(ArrayList<ReleaseArray> releases){
+
+		for(ReleaseArray release : releases){
+			int i = releases.indexOf(release);
+			 if(release.getType().equals("master")){
+
+	                System.out.println("O---------------MASTER---------------O");
+	                System.out.println(i+ "   Release title: " + release.getTitle());
+	                System.out.println("           Year: " + release.getYear());
+	                System.out.print("         Labels: "); 
+	                for(int b=0;b < release.getLabel().length();b++){
+	                    if(b+1 != release.getLabel().length()) {
+	                        System.out.print(release.getLabel().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getLabel().get(b));
+	                    }
+	                }
+	                System.out.print("         Genres: "); 
+	                for(int b=0;b < release.getGenres().length();b++){
+	                    if(b+1 != release.getGenres().length()) {
+	                        System.out.print(release.getGenres().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getGenres().get(b));
+
+	                    }
+
+	                }           
+	                System.out.println("           Type: " + release.getType());
+
+	            } else {
+
+	                System.out.println("....................................");
+	                System.out.println(i+ ".   Release title: " + release.getTitle());
+	                System.out.println("           Year: " + release.getYear());
+	                System.out.print("         Labels: "); 
+	                for(int b=0;b < release.getLabel().length();b++){
+	                    if(b+1 != release.getLabel().length()) {
+	                        System.out.print(release.getLabel().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getLabel().get(b));
+
+	                    }
+
+	                }
+	                System.out.print("         Genres: "); 
+	                for(int b=0;b < release.getGenres().length();b++){
+	                    if(b+1 != release.getGenres().length()) {
+	                        System.out.print(release.getGenres().get(b) + ", ");
+	                    } else {
+	                        System.out.println(release.getGenres().get(b));
+
+	                    }
+
+	                }
+	                System.out.println("           Type: " + release.getType());
+
+	            }
+		}
+	}
+    /**
      * Method for loading the config file which contains information about post format
      * @return dataBuffer - Contents of the sdfy.cfg file
      */
+	
+	public static String typeReturn(String inputChar){
+		String type = null;
+		switch (inputChar){
+		case "m":
+			type = "master";
+		case "r":
+			type = "release";
+		case "a":
+			type = "all";
+		}
+		return type;
+	}
+	
     public static StringBuffer loadConfig(){
         StringBuffer dataBuffer = new StringBuffer();
         try {
